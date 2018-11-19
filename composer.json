@@ -1,0 +1,44 @@
+{
+    "name": "bloopy-api",
+    "description": "bloopy-api robot",
+    "keywords": [
+        "microframework",
+        "rest",
+        "router",
+        "psr7",
+        "eloquent",
+        "docker",
+        "aws"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "zhaozhikai",
+            "email": "zhikai.zhao@mobingi.cn"
+        }
+    ],
+    "require": {
+        "php": ">=7.1",
+        "slim/slim": "^3.1",
+        "monolog/monolog": "^1.23",
+        "aws/aws-sdk-php": "^3.70",
+        "predis/predis": "^1.1"
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "psr-4": {
+            "Controllers\\": "src/controllers"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+        }
+    },
+    "config": {
+        "process-timeout" : 0
+    },
+    "scripts": {
+
+    }
+}
