@@ -1,0 +1,115 @@
+version: 2
+jobs:
+  build:
+    docker:
+    # specify the version you desire here
+    - image: circleci/php:7.1-browsers
+
+    working_directory: ~/repo
+
+    steps:
+    - checkout
+
+    - setup_remote_docker
+    # Download and cache dependencies
+    - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "composer.json" }}
+        # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
+
+    - run: composer install -n --prefer-dist
+
+    - save_cache:
+        paths:
+        - ./vendor
+        key: v1-dependencies-{{ checksum "composer.json" }}
+
+    - run:
+        name: Build image
+        command: |
+          docker build -t app -f docker/nginx-php7/Dockerfile .
+    - run:
+        name: Test image
+        command: |
+          docker run -d -p 8080:80 --name built-image app
+          sleep 10
+          docker run --network container:built-image byrnedo/alpine-curl -I --retry 10 --retry-connrefused http://localhost
+
+    - run:
+        name: Save image to an archive
+        command: |
+          mkdir docker-image
+          docker save -o docker-image/image.tar app
+    - persist_to_workspace:
+        root: .
+        paths:
+        - docker-image
+
+
+  deploy:
+    name: Push Docker image to ecr
+    docker:
+    - image: circleci/python:3.6.1
+    working_directory: ~/repo
+    environment:
+      AWS_DEFAULT_OUTPUT: json
+      AWS_ECR_REPO: bloopy-api-dev
+      APP_NAME: bloopy-api
+    steps:
+    - checkout
+    - setup_remote_docker
+    - attach_workspace:
+        at: workspace
+
+    - restore_cache:
+        key: venv-{{ checksum "requirements.txt" }}
+
+    - run:
+        name: Get Aws-cli
+        command: |
+          python3 -m venv venv
+          . venv/bin/activate
+          pip install -r requirements.txt
+
+    - save_cache:
+        key: venv-{{ checksum "requirements.txt" }}
+        paths:
+        - "venv"    # Download and cache dependencies
+    - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "composer.json" }}
+        # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
+    - run:
+        name: Load image
+        command: |
+          docker load --input workspace/docker-image/image.tar
+    - run:
+        name: Push Docker Image
+        command: |
+          . venv/bin/activate
+          $(aws ecr get-login --no-include-email)
+          docker tag app $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com.cn/$AWS_ECR_REPO:$CIRCLE_SHA1
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com.cn/$AWS_ECR_REPO:$CIRCLE_SHA1
+    - run:
+        name: Run task
+        command: |
+          docker run --rm stead/ecs-task-deploy \
+              -k $AWS_ACCESS_KEY_ID \
+              -s $AWS_SECRET_ACCESS_KEY \
+              -r $AWS_DEFAULT_REGION \
+              -c mobingi-dev-cluster \
+              -n $APP_NAME-dev-service \
+              -i $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com.cn/$AWS_ECR_REPO:$CIRCLE_SHA1  \
+              --kill-task
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+    - build
+    - deploy:
+        requires:
+        - build
+
+

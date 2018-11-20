@@ -15,7 +15,7 @@ services:
         - ./docker/nginx-php7/sites:/etc/nginx/sites-enabled
 #        - ./docker/nginx-php7/logs:/var/log/nginx/
       links:
-      - redis:127.0.0.1
+        - redis:127.0.0.1
       networks:
         - slim-network
   redis:
