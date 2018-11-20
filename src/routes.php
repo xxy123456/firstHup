@@ -11,3 +11,8 @@ $app->get('/', function (Request $request, Response $response, array $args) {
     echo 'hello,world';
 
 });
+$app->get('/index', function (Request $request, Response $response, array $args) {
+
+    echo phpinfo();
+
+});
