@@ -4,7 +4,9 @@ services:
 
   nginx-php7:
       container_name: bloopy-api
-      build: docker/nginx-php7
+      build:
+        context: .
+        dockerfile: docker/nginx-php7/Dockerfile
       ports:
         - 8088:80
       environment:
