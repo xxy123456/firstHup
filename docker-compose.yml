@@ -9,13 +9,9 @@ services:
         dockerfile: docker/nginx-php7/Dockerfile
       ports:
         - 8088:80
-      environment:
-        SKIP_COMPOSER: 1
-        WEBROOT: /var/www/public
       volumes:
         - ./:/var/www
-        - ./docker/nginx-php7/sites:/etc/nginx/sites-enabled
-#        - ./docker/nginx-php7/logs:/var/log/nginx/
+        - ./docker/nginx-php7/sites:/etc/nginx/conf.d
       links:
         - redis:127.0.0.1
       networks:
