@@ -1,16 +1,17 @@
 <?php
 return [
+
     'settings' => [
         'displayErrorDetails' => true,
         'addContentLengthHeader' => false,
-
         // Monolog settings
         'logger' => [
-            'name' => 'slim-app',
+            'name' => env('LOG_NAME','slim_log'),
             'path' =>  'php://stdout',
-//            'path' =>  __DIR__ . '/../logs/logs.log',
-            'level' => \Monolog\Logger::DEBUG,
+            'level' => env('LOG_DEBUG',false) ? \Monolog\Logger::DEBUG : \Monolog\Logger::INFO ,
         ],
     ],
+
+
 
 ];

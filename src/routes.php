@@ -6,8 +6,6 @@ use Slim\Http\Response;
 // Routes
 
 $app->get('/', function (Request $request, Response $response, array $args) {
-
-    var_dump($this->config);
     echo 'hello,world';
 });
 
