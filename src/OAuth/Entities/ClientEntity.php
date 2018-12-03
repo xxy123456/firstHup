@@ -16,4 +16,16 @@ use League\OAuth2\Server\Entities\Traits\EntityTrait;
 class ClientEntity implements ClientEntityInterface
 {
     use EntityTrait, ClientTrait;
+
+    protected $scopes = [];
+
+    public function getClientScopes(): array
+    {
+        return $this->scopes;
+    }
+
+    public function setClientScopes(array $scopes): void
+    {
+        $this->scopes = $scopes;
+    }
 }

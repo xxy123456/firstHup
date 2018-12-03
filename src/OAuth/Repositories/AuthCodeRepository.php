@@ -10,28 +10,67 @@ namespace App\OAuth\Repositories;
 
 
 use App\OAuth\Entities\AuthCodeEntity;
+use App\OAuth\Entities\ScopeEntity;
+use Aws\DynamoDb\Marshaler;
 use League\OAuth2\Server\Entities\AuthCodeEntityInterface;
 use League\OAuth2\Server\Repositories\AuthCodeRepositoryInterface;
 
-class AuthCodeRepository implements AuthCodeRepositoryInterface
+class AuthCodeRepository extends Repositories implements AuthCodeRepositoryInterface
 {
-    public function getNewAuthCode()
+    public function getNewAuthCode(): AuthCodeEntity
     {
         return new AuthCodeEntity();
     }
 
-    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity)
+    /** @param AuthCodeEntityInterface|AuthCodeEntity $authCodeEntity */
+    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity): void
     {
-//        return $authCodeEntity;
+        $marshaler = new Marshaler();
+        $item = $marshaler->marshalItem([
+            'auth_code'    => $authCodeEntity->getIdentifier(),
+            'user_id'      => $authCodeEntity->getUserIdentifier(),
+            'client_id'    => $authCodeEntity->getClient()->getIdentifier(),
+            'scopes'       => ScopeEntity::getIdentifiersByEntity($authCodeEntity->getScopes()),
+            'time_to_live' => $authCodeEntity->getTimestampByTTL($this->settings['dateTimeZone'])
+        ]);
+        $params = [
+            'TableName' => 'OAuth_AuthCodes',
+            'Item'      => $item
+        ];
+        $this->dynamoDB->putItem($params);
     }
 
-    public function revokeAuthCode($codeId)
+    public function revokeAuthCode($codeId): void
     {
+        $marshaler = new Marshaler();
+        $itemQuery = $marshaler->marshalItem([
+            'auth_code' => $codeId
+        ]);
+        $data = $marshaler->marshalItem([
+            ':timeToLive' => time()
+        ]);
 
+        $this->dynamoDB->updateItem([
+            'TableName'                 => 'OAuth_AuthCodes',
+            'Key'                       => $itemQuery,
+            'UpdateExpression'          => 'SET time_to_live = :timeToLive',
+            'ExpressionAttributeValues' => $data
+        ]);
     }
 
-    public function isAuthCodeRevoked($codeId)
+    public function isAuthCodeRevoked($codeId): bool
     {
-        return false;
+        $marshaler = new Marshaler();
+        $itemQuery = $marshaler->marshalItem([
+            'auth_code' => $codeId
+        ]);
+        $item = $this->dynamoDB->getItem([
+            'TableName' => 'OAuth_AuthCodes',
+            'Key'       => $itemQuery
+        ]);
+        if ($item->count() && $item->toArray()['Item']['time_to_live']['N'] > time()) {
+            return false;
+        }
+        return true;
     }
 }

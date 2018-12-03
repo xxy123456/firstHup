@@ -20,4 +20,12 @@ class ScopeEntity implements ScopeEntityInterface
     {
         return $this->getIdentifier();
     }
+
+    public static function getIdentifiersByEntity(array $scopeEntity): array
+    {
+        return array_map(function ($entity): string {
+            /** @var ScopeEntity $entity */
+            return $entity->getIdentifier();
+        }, $scopeEntity);
+    }
 }

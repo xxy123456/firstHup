@@ -3,31 +3,31 @@
 $container = $app->getContainer();
 
 // monolog
-$container['logger'] = function ($c) {
-    $settings = $c->get('settings')['logger'];
+$container['logger'] = function ($container) {
+    $settings = $container->get('settings')['logger'];
     $logger = new Monolog\Logger($settings['name']);
     $logger->pushProcessor(new Monolog\Processor\UidProcessor());
     $logger->pushHandler(new Monolog\Handler\StreamHandler($settings['path'], $settings['level']));
     return $logger;
 };
 
-// OAuth2
-$container['oauth'] = function ($c) {
-    $clientRepository = new \App\OAuth\Repositories\ClientRepository(); // instance of ClientRepositoryInterface
-    $scopeRepository = new \App\OAuth\Repositories\ScopeRepository(); // instance of ScopeRepositoryInterface
-    $accessTokenRepository = new \App\OAuth\Repositories\AccessTokenRepository(); // instance of AccessTokenRepositoryInterface
-    $userRepository = new \App\OAuth\Repositories\UserRepository(); // instance of UserRepositoryInterface
-    $refreshTokenRepository = new \App\OAuth\Repositories\RefreshTokenRepository(); // instance of RefreshTokenRepositoryInterface
-    $authCodeRepository = new \App\OAuth\Repositories\AuthCodeRepository(); // instance of AuthCodeRepositoryInterface
+// OAuth2 authorization server
+$container['oauth'] = function ($container) {
+    $clientRepository = new \App\OAuth\Repositories\ClientRepository($container); // instance of ClientRepositoryInterface
+    $scopeRepository = new \App\OAuth\Repositories\ScopeRepository($container); // instance of ScopeRepositoryInterface
+    $accessTokenRepository = new \App\OAuth\Repositories\AccessTokenRepository($container); // instance of AccessTokenRepositoryInterface
+    $userRepository = new \App\OAuth\Repositories\UserRepository($container); // instance of UserRepositoryInterface
+    $refreshTokenRepository = new \App\OAuth\Repositories\RefreshTokenRepository($container); // instance of RefreshTokenRepositoryInterface
+    $authCodeRepository = new \App\OAuth\Repositories\AuthCodeRepository($container); // instance of AuthCodeRepositoryInterface
 
-    $settings = $c->get('settings')['oauth'];
+    $settings = $container->get('settings')['oauth'];
 
     $server = new \League\OAuth2\Server\AuthorizationServer(
         $clientRepository,
         $accessTokenRepository,
         $scopeRepository,
         $settings['privateKey'],
-        $settings['encryptionKey']
+        \Defuse\Crypto\Key::loadFromAsciiSafeString($settings['encryptionKey'])
     );
 
     // Password grant
@@ -59,5 +59,43 @@ $container['oauth'] = function ($c) {
         new \DateInterval('PT1H')
     );
 
+    // ImplicitGrant
+    $server->enableGrantType(
+        new \League\OAuth2\Server\Grant\ImplicitGrant(new \DateInterval('PT1H')),
+        new \DateInterval('PT1H')
+    );
+
+    // RefreshToken
+    $grant = new \League\OAuth2\Server\Grant\RefreshTokenGrant($refreshTokenRepository);
+    $grant->setRefreshTokenTTL(new \DateInterval('P1M'));
+    $server->enableGrantType(
+        $grant,
+        new \DateInterval('PT1H')
+    );
+
     return $server;
+};
+
+// OAuth2 resource server
+$container['oauthResourceServer'] = function ($container) {
+    $accessTokenRepository = new \App\OAuth\Repositories\AccessTokenRepository($container);
+    $settings = $container->get('settings')['oauth'];
+
+    return new \League\OAuth2\Server\ResourceServer(
+        $accessTokenRepository,
+        $settings['publicKey']
+    );
+};
+
+// aws dynamoDB sdk
+$container['dynamoDB'] = function ($container) {
+    $setting = $container->get('settings')['dynamoDB'];
+    return new \Aws\DynamoDb\DynamoDbClient([
+        'region' => $setting['region'],
+        'version' => $setting['version'],
+        'credentials' => [
+            'key' => $setting['credentials']['key'],
+            'secret' => $setting['credentials']['secret']
+        ]
+    ]);
 };

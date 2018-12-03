@@ -13,14 +13,15 @@ use App\OAuth\Entities\UserEntity;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\UserRepositoryInterface;
 
-class UserRepository implements UserRepositoryInterface
+class UserRepository extends Repositories implements UserRepositoryInterface
 {
     public function getUserEntityByUserCredentials(
         $username,
         $password,
         $grantType,
         ClientEntityInterface $clientEntity
-    ) {
+    ): UserEntity
+    {
         $user = new UserEntity();
         $user->setIdentifier(1);
 
