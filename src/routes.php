@@ -6,7 +6,8 @@ use Slim\Http\Response;
 // Routes
 
 $app->get('/', function (Request $request, Response $response, array $args) {
-    $this->logger->info("zhaozhikai '/' route");
+
+    var_dump($this->config);
     echo 'hello,world';
 });
 

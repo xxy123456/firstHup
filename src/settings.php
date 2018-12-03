@@ -12,4 +12,5 @@ return [
             'level' => \Monolog\Logger::DEBUG,
         ],
     ],
+
 ];
