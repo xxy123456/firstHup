@@ -44,7 +44,7 @@ class AuthCodeRepository extends Repositories implements AuthCodeRepositoryInter
         $this->dynamoDB->putItem($params);
 
         $this->cache->set(
-            $this->getCacheKey($data['auth_code']),
+            $this->getOAuthCacheKey($data['auth_code']),
             array_only($data, ['user_id']),
             $data['time_to_live']
         );
@@ -67,12 +67,12 @@ class AuthCodeRepository extends Repositories implements AuthCodeRepositoryInter
             'ExpressionAttributeValues' => $data
         ]);
 
-        $this->cache->delete($this->getCacheKey($codeId));
+        $this->cache->delete($this->getOAuthCacheKey($codeId));
     }
 
     public function isAuthCodeRevoked($codeId): bool
     {
-        if ($this->cache->has($this->getCacheKey($codeId))) {
+        if ($this->cache->has($this->getOAuthCacheKey($codeId))) {
             return false;
         }
 

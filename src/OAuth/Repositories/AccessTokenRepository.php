@@ -53,7 +53,7 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
         $this->dynamoDB->putItem($params);
 
         $this->cache->set(
-            $this->getCacheKey($data['access_token']),
+            $this->getOAuthCacheKey($data['access_token']),
             array_only($data, ['user_id']),
             $data['time_to_live']
         );
@@ -84,12 +84,12 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
             }
         }
 
-        $this->cache->delete($this->getCacheKey($tokenId));
+        $this->cache->delete($this->getOAuthCacheKey($tokenId));
     }
 
     public function isAccessTokenRevoked($tokenId): bool
     {
-        if ($this->cache->has($this->getCacheKey($tokenId))) {
+        if ($this->cache->has($this->getOAuthCacheKey($tokenId))) {
             return false;
         }
 

@@ -29,12 +29,9 @@ class Repositories
         $this->settings = $container->get('settings')['oauth'];
     }
 
-    protected function getCacheKey(string $key, $class = false): string
+    protected function getOAuthCacheKey(string $key): string
     {
-        $className = $class
-            ? is_object($class) ? get_class($class) : (string) $class
-            : get_class($this);
-        switch ($className) {
+        switch (get_class($this)) {
             case AccessTokenRepository::class:
                 $key = 'oauth-access_token-' . $key;
                 break;
