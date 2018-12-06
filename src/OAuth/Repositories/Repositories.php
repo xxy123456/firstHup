@@ -10,20 +10,40 @@ namespace App\OAuth\Repositories;
 
 
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Cache\Simple\RedisCache;
 
 class Repositories
 {
-    protected $container;
-
     /** @var \Aws\DynamoDb\DynamoDbClient */
     protected $dynamoDB;
+
+    /** @var RedisCache */
+    protected $cache;
 
     protected $settings = [];
 
     public function __construct(ContainerInterface $container)
     {
-        $this->container = $container;
         $this->dynamoDB = $container->get('dynamoDB');
-        $this->settings = $this->container->get('settings')['oauth'];
+        $this->cache    = $container->get('cache');
+        $this->settings = $container->get('settings')['oauth'];
+    }
+
+    protected function getCacheKey(string $key, $class = false): string
+    {
+        $className = $class
+            ? is_object($class) ? get_class($class) : (string) $class
+            : get_class($this);
+        switch ($className) {
+            case AccessTokenRepository::class:
+                $key = 'oauth-access_token-' . $key;
+                break;
+            case AuthCodeRepository::class:
+                $key = 'oauth-auth_code-' . $key;
+                break;
+            default:
+                $key = 'oauth-' . $key;
+        }
+        return $key;
     }
 }

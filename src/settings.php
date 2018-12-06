@@ -6,9 +6,8 @@ return [
 
         // Monolog settings
         'logger' => [
-            'name' => 'slim-app',
-            'path' =>  'php://stdout',
-//            'path' =>  __DIR__ . '/../logs/logs.log',
+            'name'  => 'slim-app',
+            'path'  =>  'php://stdout',
             'level' => \Monolog\Logger::DEBUG,
         ],
         'oauth' => [
@@ -18,12 +17,18 @@ return [
             'dateTimeZone'  => 'Asia/Shanghai',
         ],
         'dynamoDB' => [
-            'region' => 'cn-north-1',
-            'version' => 'latest',
+            'region'      => 'cn-north-1',
+            'version'     => 'latest',
             'credentials' => [
-                'key' => 'AKIAOQV5XNRGBZW7YGOA',
+                'key'    => 'AKIAOQV5XNRGBZW7YGOA',
                 'secret' => '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',
             ],
         ],
+        'redis' => [
+            'scheme'   => 'tcp',
+            'host'     => 'redis',
+            'port'     => 6379,
+            'database' => 15
+        ]
     ],
 ];

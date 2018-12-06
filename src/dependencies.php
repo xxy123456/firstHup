@@ -99,3 +99,12 @@ $container['dynamoDB'] = function ($container) {
         ]
     ]);
 };
+
+$container['predis'] = function ($container) {
+    $settings = $container->get('settings')['redis'];
+    return new \Predis\Client($settings);
+};
+
+$container['cache'] = function ($container) {
+    return new \Symfony\Component\Cache\Simple\RedisCache($container->get('predis'));
+};

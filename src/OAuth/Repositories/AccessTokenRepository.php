@@ -31,22 +31,32 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
         return $accessToken;
     }
 
-    /** @param AccessTokenEntityInterface|AccessTokenEntity $accessTokenEntity */
+    /**
+     * @param AccessTokenEntityInterface|AccessTokenEntity $accessTokenEntity
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity): void
     {
         $marshaler = new Marshaler();
-        $item = $marshaler->marshalItem([
+        $data = [
             'access_token' => $accessTokenEntity->getIdentifier(),
             'user_id'      => $accessTokenEntity->getUserIdentifier(),
             'client_id'    => $accessTokenEntity->getClient()->getIdentifier(),
             'scopes'       => ScopeEntity::getIdentifiersByEntity($accessTokenEntity->getScopes()),
             'time_to_live' => $accessTokenEntity->getTimestampByTTL($this->settings['dateTimeZone'])
-        ]);
+        ];
+        $item = $marshaler->marshalItem($data);
         $params = [
             'TableName' => 'OAuth_AccessTokens',
             'Item'      => $item
         ];
         $this->dynamoDB->putItem($params);
+
+        $this->cache->set(
+            $this->getCacheKey($data['access_token']),
+            array_only($data, ['user_id']),
+            $data['time_to_live']
+        );
     }
 
     public function revokeAccessToken($tokenId): void
@@ -73,10 +83,16 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
                 throw $exception;
             }
         }
+
+        $this->cache->delete($this->getCacheKey($tokenId));
     }
 
     public function isAccessTokenRevoked($tokenId): bool
     {
+        if ($this->cache->has($this->getCacheKey($tokenId))) {
+            return false;
+        }
+
         $marshaler = new Marshaler();
         $itemQuery = $marshaler->marshalItem([
             'access_token' => $tokenId

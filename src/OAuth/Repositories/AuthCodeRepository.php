@@ -22,22 +22,32 @@ class AuthCodeRepository extends Repositories implements AuthCodeRepositoryInter
         return new AuthCodeEntity();
     }
 
-    /** @param AuthCodeEntityInterface|AuthCodeEntity $authCodeEntity */
+    /**
+     * @param AuthCodeEntityInterface|AuthCodeEntity $authCodeEntity
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
     public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity): void
     {
         $marshaler = new Marshaler();
-        $item = $marshaler->marshalItem([
+        $data = [
             'auth_code'    => $authCodeEntity->getIdentifier(),
             'user_id'      => $authCodeEntity->getUserIdentifier(),
             'client_id'    => $authCodeEntity->getClient()->getIdentifier(),
             'scopes'       => ScopeEntity::getIdentifiersByEntity($authCodeEntity->getScopes()),
             'time_to_live' => $authCodeEntity->getTimestampByTTL($this->settings['dateTimeZone'])
-        ]);
+        ];
+        $item = $marshaler->marshalItem($data);
         $params = [
             'TableName' => 'OAuth_AuthCodes',
             'Item'      => $item
         ];
         $this->dynamoDB->putItem($params);
+
+        $this->cache->set(
+            $this->getCacheKey($data['auth_code']),
+            array_only($data, ['user_id']),
+            $data['time_to_live']
+        );
     }
 
     public function revokeAuthCode($codeId): void
@@ -56,10 +66,16 @@ class AuthCodeRepository extends Repositories implements AuthCodeRepositoryInter
             'UpdateExpression'          => 'SET time_to_live = :timeToLive',
             'ExpressionAttributeValues' => $data
         ]);
+
+        $this->cache->delete($this->getCacheKey($codeId));
     }
 
     public function isAuthCodeRevoked($codeId): bool
     {
+        if ($this->cache->has($this->getCacheKey($codeId))) {
+            return false;
+        }
+
         $marshaler = new Marshaler();
         $itemQuery = $marshaler->marshalItem([
             'auth_code' => $codeId

@@ -13,6 +13,7 @@ use League\OAuth2\Server\Exception\OAuthServerException;
 use Slim\Container;
 use Slim\Http\Request;
 use Slim\Http\Response;
+use Symfony\Component\Cache\Simple\RedisCache;
 
 class OAuthController
 {
@@ -37,7 +38,7 @@ class OAuthController
         // You will probably want to redirect the user at this point to a login endpoint.
 
         // Once the user has logged in set the user on the AuthorizationRequest
-        $authRequest->setUser(new UserEntity(1)); // an instance of UserEntityInterface
+        $authRequest->setUser(new UserEntity()); // an instance of UserEntityInterface
 
         // At this point you should redirect the user to an authorization page.
         // This form will ask the user to approve the client and the scopes requested.

@@ -52,9 +52,9 @@ class ScopeRepository extends Repositories implements ScopeRepositoryInterface
     {
         $clientScopes = $clientEntity->getClientScopes();
         $scopesArray = ScopeEntity::getIdentifiersByEntity($scopes);
-        if ($diffScopes = array_diff($clientScopes, $scopesArray)) {
-            throw OAuthServerException::invalidScope(implode($diffScopes, ', '));
-        }
+//        if ($diffScopes = array_diff($clientScopes, $scopesArray)) {
+//            throw OAuthServerException::invalidScope(implode($diffScopes, ', '));
+//        }
         return $scopes;
     }
 }
