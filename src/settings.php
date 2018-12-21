@@ -1,14 +1,14 @@
 <?php
 return [
+
     'settings' => [
         'displayErrorDetails' => true,
         'addContentLengthHeader' => false,
-
         // Monolog settings
         'logger' => [
-            'name'  => 'slim-app',
-            'path'  =>  'php://stdout',
-            'level' => \Monolog\Logger::DEBUG,
+            'name' => env('LOG_NAME','slim_log'),
+            'path' =>  'php://stdout',
+            'level' => env('LOG_DEBUG',false) ? \Monolog\Logger::DEBUG : \Monolog\Logger::INFO ,
         ],
         'oauth' => [
             'privateKey'    => __DIR__ . '/OAuth/sslKeys/private.key',
@@ -31,4 +31,7 @@ return [
             'database' => 15
         ]
     ],
+
+
+
 ];
