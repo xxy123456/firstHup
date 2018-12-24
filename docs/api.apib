@@ -1,0 +1,61 @@
+FORMAT: 1A
+HOST: https://alpha-api.app.net
+
+# bloopy API
+
+# 全局
+## 表单验证类错误返回 （422）
+```json
+{
+    "message":"表单验证中第一个错误/其他错误",
+    "code" : "422xxx",
+    "errors" :{
+        "filed1":["错误1","错误2"],
+        "filed2":["错误1"],
+    }
+}
+```
+## 资源未找到错误 (404)
+```json
+{
+    "message":"表单验证中第一个错误/其他错误",
+    "code" : "404000"
+}
+```
+## 其他未知错误 (500)
+```json
+{
+    "message":"服务器繁忙",
+    "code" : "500xxx"
+}
+```
+
+
+
+# 登陆 [/login]
+
+
+## 登陆 [POST]
+
++ Request (application/json)
+
+        {
+            "username": "Favourite language?",
+            "password":  ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "msp_id":"1",
+            "user_name":"mobingi",
+            "refresh_token": "aaaaaa",
+            "access_token" : "asfqtqtadgdgseeteasvv"
+        }
+
++ Response 403 (application/json)
+
+        {
+            "message":"登陆失败,用户名或密码错误",
+            "code" : "403001",
+        }
