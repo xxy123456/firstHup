@@ -1,34 +1,20 @@
 version: '3'
 
 services:
-  nginx-php7:
-    container_name: bloopy-api
-    build:
-      context: .
-      dockerfile: docker/nginx-php7/Dockerfile
-    ports:
-      - 8088:80
-    volumes:
-      - ./:/var/www
-      - ./docker/nginx-php7/sites:/etc/nginx/conf.d
-    links:
-      - redis:127.0.0.1
-    networks:
-      - slim-network
-  #slim-swoole:
-      #container_name: slim-swoole
-      #build:
-        #context: .
-        #dockerfile: docker/np7/Dockerfile
-      #ports:
-        #- 8099:80
-      #volumes:
-       # - ./:/var/www/html
-       # - ./docker/np7/nginx-sites:/etc/nginx/sites-enabled
-      #links:
-       # - redis:127.0.0.1
-      #networks:
-        #- slim-network
+  slim-swoole:
+      container_name: slim-swoole
+      build:
+        context: .
+        dockerfile: docker/np7/Dockerfile
+      ports:
+        - 8099:80
+      volumes:
+        - ./:/var/www/html
+        - ./docker/np7/nginx-sites:/etc/nginx/sites-enabled
+      links:
+        - redis:127.0.0.1
+      networks:
+        - slim-network
   redis:
     container_name: bloopy-api-redis
     build: docker/redis

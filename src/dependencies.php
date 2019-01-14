@@ -10,7 +10,9 @@ $container['logger'] = function ($container) {
     $logger->pushHandler(new Monolog\Handler\StreamHandler($settings['path'], $settings['level']));
     return $logger;
 };
-
+$container['aa'] = function ($container) {
+    return 116;
+};
 // OAuth2 authorization server
 $container['oauth'] = function ($container) {
     $clientRepository = new \App\OAuth\Repositories\ClientRepository($container); // instance of ClientRepositoryInterface

@@ -22,6 +22,7 @@ class UserRepository extends Repositories implements UserRepositoryInterface
         ClientEntityInterface $clientEntity
     ): UserEntity
     {
+
         $user = new UserEntity();
         $user->setIdentifier(1);
 

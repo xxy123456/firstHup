@@ -21,6 +21,7 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
 {
     public function getNewToken(ClientEntityInterface $clientEntity, array $scopes, $userIdentifier = null): AccessTokenEntity
     {
+        echo 1;
         $accessToken = new AccessTokenEntity();
         $accessToken->setClient($clientEntity);
         foreach ($scopes as $scope) {
@@ -37,6 +38,7 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
      */
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity): void
     {
+        echo 2;
         $marshaler = new Marshaler();
         $data = [
             'access_token' => $accessTokenEntity->getIdentifier(),
@@ -45,11 +47,13 @@ class AccessTokenRepository extends Repositories implements AccessTokenRepositor
             'scopes'       => ScopeEntity::getIdentifiersByEntity($accessTokenEntity->getScopes()),
             'time_to_live' => $accessTokenEntity->getTimestampByTTL($this->settings['dateTimeZone'])
         ];
+
         $item = $marshaler->marshalItem($data);
         $params = [
             'TableName' => 'OAuth_AccessTokens',
             'Item'      => $item
         ];
+
         $this->dynamoDB->putItem($params);
 
         $this->cache->set(

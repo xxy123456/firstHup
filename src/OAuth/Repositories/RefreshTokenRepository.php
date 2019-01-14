@@ -24,6 +24,8 @@ class RefreshTokenRepository extends Repositories implements RefreshTokenReposit
     /** @param RefreshTokenEntityInterface|RefreshTokenEntity $refreshTokenEntity */
     public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity): void
     {
+        echo 3;
+        exit;
         $marshaler = new Marshaler();
         $item = $marshaler->marshalItem([
             'refresh_token'     => $refreshTokenEntity->getIdentifier(),

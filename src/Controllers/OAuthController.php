@@ -25,6 +25,7 @@ class OAuthController
 
     public function index(Request $request, Response $response)
     {
+        echo 899;
     }
 
     public function authorize(Request $request, Response $response)
@@ -53,9 +54,49 @@ class OAuthController
 
     public function accessToken(Request $request, Response $response)
     {
+
         /* @var \League\OAuth2\Server\AuthorizationServer $server */
         $server = $this->ci->get('oauth');
         // Try to respond to the request
         return $server->respondToAccessTokenRequest($request, $response);
+    }
+
+    public function server(){
+        // Init our repositories
+        $clientRepository = new \App\OAuth\Repositories\ClientRepository($this->ci); // instance of ClientRepositoryInterface
+        $scopeRepository = new \App\OAuth\Repositories\ScopeRepository($this->ci); // instance of ScopeRepositoryInterface
+        $accessTokenRepository = new \App\OAuth\Repositories\AccessTokenRepository($this->ci); // instance of AccessTokenRepositoryInterface
+        $userRepository = new \App\OAuth\Repositories\UserRepository($this->ci); // instance of UserRepositoryInterface
+        $refreshTokenRepository = new \App\OAuth\Repositories\RefreshTokenRepository($this->ci); // instance of RefreshTokenRepositoryInterface
+
+        // Path to public and private keys
+        $privateKey =   __DIR__."/private.key";
+        //$privateKey = new CryptKey('file://path/to/private.key', 'passphrase'); // if private key has a pass phrase
+        $encryptionKey = 'lxZFUEsBCJ2Yb14IF2ygAHI5N4+ZAUXXaSeeJm6+twsUmIen'; // generate using base64_encode(random_bytes(32))
+
+        // Setup the authorization server
+        $server = new \League\OAuth2\Server\AuthorizationServer(
+            $clientRepository,
+            $accessTokenRepository,
+            $scopeRepository,
+            $privateKey,
+            $encryptionKey
+        );
+        $grant = new \League\OAuth2\Server\Grant\PasswordGrant(
+             $userRepository,
+             $refreshTokenRepository
+        );
+
+        $grant->setRefreshTokenTTL(new \DateInterval('P1M')); // refresh tokens will expire after 1 month
+
+        // Enable the password grant on the server
+        $server->enableGrantType(
+            $grant,
+            new \DateInterval('PT1H') // access tokens will expire after 1 hour
+        );
+
+    }
+    public function client(){
+        
     }
 }
