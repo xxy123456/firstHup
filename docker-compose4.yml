@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  nginx:
+    container_name: test-nginx
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - slim-network
+  php:
+    build: ./docker/test-php
+    image: php:fpm
+    volumes:
+      - ./:/home
+    ports:
+      - "9000:9000"
+    container_name: "compose-php"
+    networks:
+      - slim-network
+networks:
+  slim-network:
+    driver: "bridge"
